@@ -40,13 +40,13 @@ While researching material prices, I noticed that the same material could have a
 I also came across a few websites where basic edge and corner treatments were included in the base price, and only premium treatments had additional charges. I decided to follow a similar approach in my application.
 
 ## 3. How did you use AI? Where did it help, and how did you lead it?
-Once I was done with my research and had a clear understanding of the functional requirements, I listed everything I wanted to implement and provided it to AI to help create a development plan.
+I used a spec-driven development approach. Once I was done with my research and had a clear understanding of the functional requirements, I listed everything I wanted to implement and worked with AI to turn it into a written spec: the requirements, the pricing model, the key design decisions with their trade-offs, and the work broken into small steps, each with a clear "done when" check.
 
-I went through the plan to understand the potential challenges, different implementation approaches and their trade-offs. AI helped me explore different solutions and understand which approach would be simpler and more suitable for the scope of the project.
+I reviewed the spec before any code was written. AI helped me explore different solutions and understand which approach would be simpler and more suitable for the scope of the project, but nothing was built until I had approved the plan.
 
-Rather than asking AI to build the entire application at once, I broke down the implementation into smaller steps. I provided specific instructions for each feature, reviewed the output, and refined my prompts whenever changes were needed.
+Rather than asking AI to build the entire application at once, I had it implement one step of the spec at a time. I reviewed each change against the spec before moving on, and refined my instructions whenever something needed to change. When my requirements changed, such as adding material grades or supporting several countertops per job, I updated the spec first and then the code.
 
-I also made decisions about which features to include, simplify or leave out to avoid overengineering the application. AI helped with planning, implementation, debugging and exploring UI designs, while I guided the overall direction and made the final decisions.
+I also made the decisions about which features to include, simplify or leave out to avoid overengineering the application. AI helped with planning, implementation, debugging and exploring UI designs, while I guided the overall direction and made the final decisions.
 ## 4. What would you ask an industry expert to check or improve this?
 Since my understanding of the industry is based on research, I would like to understand the real-world experiences of someone who works directly with customers.
 
