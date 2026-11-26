@@ -70,7 +70,9 @@ export function QuoteDialog({ open, onClose, heading, quote, skipped, note }: Qu
         <span className={styles.totalAmount}>{dollars.format(quote.total)}</span>
       </div>
       <p className={styles.note}>
-        An estimate from the measurements and options entered. The shop confirms the final price after measuring on site.
+        An estimate from the measurements and options entered. Material rates include standard fabrication and
+        installation. Area is billed up to the next 0.1 sq. ft. and edges up to the next whole foot. The shop
+        confirms the final price after measuring on site.
       </p>
 
       <footer className={styles.footer}>

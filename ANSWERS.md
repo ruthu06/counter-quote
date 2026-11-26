@@ -2,8 +2,7 @@
 
 - **Name:** Ruthu Rajendra
 - **Email** (the one you applied with): ruthurajendra@gmail.com
-- **Phone** (optional):4086408650
-A few sentences each is plenty.
+- **Phone** (optional): 4086408650
 
 ## 1. What did you need to research, and how did you do it?
 I started by going through the README and understanding the requirements. Since I only had basic knowledge about countertops, I wanted to dive deeper and understand the different types of countertops, materials, shapes, edge profiles, corners and sinks.
@@ -51,6 +50,8 @@ I also made the decisions about which features to include, simplify or leave out
 Since my understanding of the industry is based on research, I would like to understand the real-world experiences of someone who works directly with customers.
 
 Some questions I would ask are:
+
+Prices are based on the drawn area only. A real quote would add slab waste and seams, which depend on slab sizes and how the pieces are laid out on them. I'd confirm how to calculate that with a fabricator before building it.
 
 What are the most common difficulties you face when working with customers?
 
@@ -137,6 +138,11 @@ Features you might miss:
 - Two countertops that overlap are outlined in red with a warning.
 - Countertops, handles and the sink can also be moved with the arrow keys.
 - Jobs can be deleted from the jobs list.
+
+Known limitations:
+
+- Sink on small countertops. When a countertop is too small for a standard sink, the drawing shrinks the sink to fit. A real sink can't shrink, so a sink that doesn't fit should be rejected, with a message to pick a bigger countertop or no sink. That still needs to be added.
+- Pricing runs in the browser.The quote is worked out in the browser, and the server saves the total it's sent. Once the app scales, the calculations should move to the backend, so the server works out the price from the saved design and the price list.
 
 ## Screenshots
 

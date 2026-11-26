@@ -151,3 +151,12 @@
   font-size: 16px;
   font-weight: 600;
 }
+
+/* Shown when the price list fails to load, with a Retry button. */
+.pricesError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+}

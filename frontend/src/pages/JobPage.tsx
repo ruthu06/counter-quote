@@ -33,7 +33,7 @@ export function JobPage() {
 function JobWorkspace({ job }: { job: Job }) {
   const countertops = useJobDesign(parseJobDesign(job.designJson));
   // For the prices next to options; the rest of the page works while it loads.
-  const { data: prices } = usePricing();
+  const { data: prices, error: pricesError, refetch: retryPrices, isFetching: loadingPrices } = usePricing();
   // Editable in the header, e.g. "Kitchen project".
   const [title, setTitle] = useState(job.title);
   const { selected, selectedApi } = countertops;
@@ -48,7 +48,9 @@ function JobWorkspace({ job }: { job: Job }) {
   const cantPrice = countertops.invalid.length
     ? `Fix the measurements on ${countertops.invalid.join(', ')}`
     : !priced
-      ? 'Waiting for prices'
+      ? pricesError
+        ? 'Prices couldn’t be loaded'
+        : 'Waiting for prices'
       : priced.errors.length
         ? `Can't price this yet: ${priced.errors.join(' ')}`
         : undefined;
@@ -89,6 +91,16 @@ function JobWorkspace({ job }: { job: Job }) {
           />
         </p>
       </header>
+
+      {/* Without prices nothing can be saved or quoted, so say so and offer a retry rather than waiting forever. */}
+      {pricesError && !prices && (
+        <div className={`errors ${styles.pricesError}`} role="alert">
+          <span>Couldn’t load prices: {pricesError.message}. Designs can still be drawn, but not saved or quoted.</span>
+          <button type="button" className="button" disabled={loadingPrices} onClick={() => retryPrices()}>
+            {loadingPrices ? 'Retrying…' : 'Retry'}
+          </button>
+        </div>
+      )}
 
       <div className={styles.workspace}>
         <section className="card">
