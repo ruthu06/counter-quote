@@ -94,3 +94,21 @@ export function quote(design: Design, prices: PricingItem[]): Quote {
 }
 
 const toCents = (dollars: number) => Math.round(dollars * 100) / 100;
+
+export interface JobQuote {
+  /** One quote per countertop that has a drawing, in list order. */
+  countertops: { id: string; name: string; quote: Quote }[];
+  total: number;
+  /** Problems across all countertops, each starting with the countertop's name. */
+  errors: string[];
+}
+
+/** Prices every drawn countertop with quote() and adds them up. Countertops without a shape yet are skipped. */
+export function quoteJob(countertops: { id: string; name: string; design: Design | null }[], prices: PricingItem[]): JobQuote {
+  const quoted = countertops.flatMap((c) => (c.design ? [{ id: c.id, name: c.name, quote: quote(c.design, prices) }] : []));
+  return {
+    countertops: quoted,
+    total: toCents(quoted.reduce((sum, c) => sum + c.quote.total, 0)),
+    errors: quoted.flatMap((c) => c.quote.errors.map((e) => `${c.name}: ${e}`)),
+  };
+}

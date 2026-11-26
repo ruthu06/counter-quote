@@ -24,14 +24,17 @@ export function Sink({ design, onMove }: SinkProps) {
   // Store where it actually lands, so dragging far outside the counter doesn't leave a far-off position behind.
   const moveTo = (wanted: Point) => onMove?.(placeSink({ ...design, sinkCenter: wanted }).center);
 
-  /** Screen pixels to drawing inches. */
+  /**
+   * Screen pixels to this countertop's inches. Uses the sink's own position on screen, so it's
+   * right even when the countertop is shifted along to sit beside others.
+   */
   const toDrawing = (event: PointerEvent<SVGGElement>): Point => {
-    const svg = event.currentTarget.ownerSVGElement!;
-    const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM()!.inverse());
+    const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(event.currentTarget.getScreenCTM()!.inverse());
     return { x: p.x, y: p.y };
   };
 
   const onPointerDown = (event: PointerEvent<SVGGElement>) => {
+    event.stopPropagation(); // move the sink, not the whole countertop
     const p = toDrawing(event);
     grab.current = { x: center.x - p.x, y: center.y - p.y };
     event.currentTarget.setPointerCapture(event.pointerId);

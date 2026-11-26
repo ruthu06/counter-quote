@@ -2,13 +2,11 @@
 // edges for every edge not against a wall, corners for every corner that can be rounded.
 
 import type { PricingItem } from '../api';
-import { type CornerStyle, type useDesign, cornerStyle, exposedProfile } from '../hooks/useDesign';
+import { type CornerStyle, type DesignApi, cornerStyle } from '../lib/designState';
 import { CORNER_RADIUS, type EdgeProfile } from '../lib/geometry';
 import { findPrice } from '../lib/quote';
 import styles from './FinishControls.module.css';
 import { InfoTip } from './InfoTip';
-
-type DesignApi = ReturnType<typeof useDesign>;
 
 /** Unfinished isn't offered: it's for wall edges, which are never finished. */
 const PROFILES: EdgeProfile[] = ['Eased', 'Beveled', 'Bullnose'];
@@ -24,8 +22,24 @@ function optionLabel(prices: PricingItem[] | undefined, category: 'Edge' | 'Corn
 export function FinishControls({ api, prices }: { api: DesignApi; prices?: PricingItem[] }) {
   return (
     <div className={styles.group}>
-      <div className={styles.field}>
-        <span className={styles.labelRow}>
+      {/* First, because it decides which edges are walls and which are finished. */}
+      <span className={styles.checkRow}>
+        <label className={styles.check}>
+          <input
+            type="checkbox"
+            checked={api.draft.freestanding}
+            onChange={(e) => api.setFreestanding(e.target.checked)}
+          />
+          Freestanding (island)
+        </label>
+        <InfoTip label="About freestanding">
+          For a piece with no side against a wall, like a kitchen island. Every edge is finished and charged, and every
+          outside corner can be rounded.
+        </InfoTip>
+      </span>
+
+      <div className="field">
+        <span className="label-row">
           <label htmlFor="edge-profile">Edges</label>
           <InfoTip label="About edges">
             Applies to every edge that isn’t against a wall. Edges against a wall (hatched on the drawing) are left
@@ -34,7 +48,8 @@ export function FinishControls({ api, prices }: { api: DesignApi; prices?: Prici
         </span>
         <select
           id="edge-profile"
-          value={exposedProfile(api.design)}
+          className="control"
+          value={api.design.edgeProfile}
           onChange={(e) => api.setExposedEdges(e.target.value as EdgeProfile)}
         >
           {PROFILES.map((p) => (
@@ -43,8 +58,8 @@ export function FinishControls({ api, prices }: { api: DesignApi; prices?: Prici
         </select>
       </div>
 
-      <div className={styles.field}>
-        <span className={styles.labelRow}>
+      <div className="field">
+        <span className="label-row">
           <label htmlFor="corner-style">Corners</label>
           <InfoTip label="About corners">
             <strong>Square</strong> leaves a sharp 90° point. <strong>Rounded</strong> cuts it into a smooth{' '}
@@ -53,6 +68,7 @@ export function FinishControls({ api, prices }: { api: DesignApi; prices?: Prici
         </span>
         <select
           id="corner-style"
+          className="control"
           value={cornerStyle(api.design)}
           onChange={(e) => api.setCorners(e.target.value as CornerStyle)}
         >

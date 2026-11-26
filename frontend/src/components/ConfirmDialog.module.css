@@ -1,0 +1,52 @@
+/* The box and backdrop come from Modal; these are the confirm dialog's contents. */
+.title {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.body {
+  color: #3e4c59;
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.cancel,
+.confirm {
+  padding: 7px 14px;
+  border-radius: var(--radius-control);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cancel {
+  border: 1px solid #c4ccd4;
+  background: #fff;
+  color: inherit;
+}
+
+.cancel:hover {
+  background: #f4f5f7;
+}
+
+/* Red, because it can't be undone. */
+.confirm {
+  border: 1px solid #a61b1b;
+  background: #a61b1b;
+  color: #fff;
+}
+
+.confirm:hover {
+  background: #8c1616;
+}
+
+.cancel:focus-visible,
+.confirm:focus-visible {
+  outline: 2px solid #1d5fa8;
+  outline-offset: 2px;
+}

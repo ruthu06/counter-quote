@@ -11,7 +11,8 @@ export interface Job {
   quoteTotal: number;
 }
 
-export type NewJob = Pick<Job, 'customerName' | 'material' | 'title'>;
+/** Material is chosen per countertop and filled in on save, so a new job only needs these. */
+export type NewJob = Pick<Job, 'customerName' | 'title'>;
 
 export type PricingCategory = 'Material' | 'Edge' | 'Corner' | 'Sink';
 /** What the price is multiplied by: area, edge length, or a count. */
@@ -36,7 +37,8 @@ async function request<T>(path: string, method = 'GET', body?: unknown): Promise
     const reasons = problem?.errors ? Object.values(problem.errors).flat().join(' ') : '';
     throw new Error(reasons || `Request failed (${response.status})`);
   }
-  return response.json();
+  // 204 No Content (e.g. after a delete) has no body to read.
+  return response.status === 204 ? (undefined as T) : response.json();
 }
 
 export const getJobs = () => request<Job[]>('/api/jobs');
@@ -44,3 +46,4 @@ export const getJob = (id: number) => request<Job>(`/api/jobs/${id}`);
 export const createJob = (job: NewJob) => request<Job>('/api/jobs', 'POST', job);
 export const updateJob = (job: Job) => request<Job>(`/api/jobs/${job.id}`, 'PUT', job);
 export const getPricing = () => request<PricingItem[]>('/api/pricing');
+export const deleteJob = (id: number) => request<void>(`/api/jobs/${id}`, 'DELETE');

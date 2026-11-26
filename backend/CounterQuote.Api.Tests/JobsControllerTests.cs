@@ -64,6 +64,21 @@ public class JobsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Deleting_a_job_removes_it_and_a_missing_job_is_not_found()
+    {
+        using AppDbContext db = CreateDb();
+        db.Jobs.AddRange(new Job { CustomerName = "Rivera" }, new Job { CustomerName = "Chen" });
+        db.SaveChanges();
+        int riveraId = db.Jobs.Single(j => j.CustomerName == "Rivera").Id;
+
+        Assert.IsType<NoContentResult>(await new JobsController(db).Delete(riveraId));
+        Assert.IsType<NotFoundResult>(await new JobsController(db).Delete(riveraId));
+
+        using AppDbContext readDb = CreateDb();
+        Assert.Equal("Chen", Assert.Single(readDb.Jobs).CustomerName);
+    }
+
+    [Fact]
     public async Task Pricing_returns_the_seeded_price_list()
     {
         using AppDbContext db = CreateDb();

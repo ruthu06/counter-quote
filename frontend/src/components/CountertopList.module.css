@@ -1,0 +1,103 @@
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.heading {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 2px;
+}
+
+.count {
+  color: #66727f;
+  font-weight: 400;
+}
+
+/* One countertop. The selected one is blue and shows its shape tiles. */
+.card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e1e5ea;
+  border-radius: var(--radius-control);
+  background: #fff;
+}
+
+.selected {
+  border-color: #1d5fa8;
+  background: #eef4fc;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* The card's name and summary, as one button that selects it. */
+.select {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.select:focus-visible,
+.remove:focus-visible,
+.add:focus-visible {
+  outline: 2px solid #1d5fa8;
+  outline-offset: 2px;
+}
+
+.name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.summary {
+  color: #66727f;
+  font-size: 13px;
+}
+
+.remove {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: #a61b1b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add {
+  padding: 10px;
+  border: 1px dashed #c4ccd4;
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: #1d5fa8;
+  font: inherit;
+  cursor: pointer;
+}
+
+.add:hover:not(:disabled) {
+  border-color: #1d5fa8;
+  background: #f5f9fe;
+}
+
+.add:disabled {
+  color: #9aa5b1;
+  cursor: default;
+}
+
+.hint {
+  margin: 0;
+  color: #66727f;
+  font-size: 13px;
+}

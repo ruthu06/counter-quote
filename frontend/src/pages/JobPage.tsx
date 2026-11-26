@@ -1,18 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { type Job, getJob } from '../api';
 import { CounterCanvas, EmptyCanvas } from '../components/CounterCanvas';
-import { DesignControls, ShapeTiles, shapeName } from '../components/DesignControls';
+import { CountertopList } from '../components/CountertopList';
+import { DesignControls } from '../components/DesignControls';
 import { FinishControls } from '../components/FinishControls';
-import { QuoteSummary } from '../components/QuoteSummary';
-import { useDesign } from '../hooks/useDesign';
+import { QuoteDialog } from '../components/QuoteDialog';
 import { usePricing } from '../hooks/usePricing';
+import { type JobDesignApi, useJobDesign } from '../hooks/useJobDesign';
 import { useSaveJob } from '../hooks/useSaveJob';
-import { parseDesign } from '../lib/designStorage';
-import { type Design, newDesign } from '../lib/geometry';
-import { isMaterial } from '../lib/materials';
-import { quote } from '../lib/quote';
+import { parseJobDesign } from '../lib/designStorage';
+import { formatNumber, shapeToPolygon } from '../lib/geometry';
+import { type JobQuote, quoteJob } from '../lib/quote';
 import styles from './JobPage.module.css';
 
 export function JobPage() {
@@ -22,144 +22,137 @@ export function JobPage() {
   if (error) return <p className="errors">{error.message}</p>;
   if (!job) return <p>Loading…</p>;
 
-  // Keyed by job, so opening another job starts its own design.
-  return <JobEditor key={job.id} job={job} />;
+  // Keyed by job, so opening another job starts from its own countertops.
+  return <JobWorkspace key={job.id} job={job} />;
 }
 
 /**
- * A job with a saved drawing opens straight into the editor. A job without one starts on an
- * empty canvas, and the editor opens once a shape is picked.
+ * Countertop list | drawing of the selected countertop | its customization, with a bar at the
+ * bottom for the whole job. A new job has no countertops: a blank canvas until one is added.
  */
-function JobEditor({ job }: { job: Job }) {
-  const [initial, setInitial] = useState<Design | null>(() => parseDesign(job.designJson));
-  // Editable in the header, so jobs created without a title can get one; saved with Save job.
+function JobWorkspace({ job }: { job: Job }) {
+  const countertops = useJobDesign(parseJobDesign(job.designJson));
+  // For the prices next to options; the rest of the page works while it loads.
+  const { data: prices } = usePricing();
+  // Editable in the header, e.g. "Kitchen project".
   const [title, setTitle] = useState(job.title);
+  const { selected, selectedApi } = countertops;
+  const saving = useSaveJob(job, countertops.jobDesign, title);
 
-  if (!initial) {
-    const material = isMaterial(job.material) ? job.material : 'Quartz';
-    return (
-      <>
-        <JobHeader job={job} title={title} onTitle={setTitle} titleHint="Countertop (add a title)">
-          <span className={styles.saveStatus}>Not saved yet</span>
-          <button type="button" className="button" disabled title="Pick a shape first">
-            Save job
-          </button>
-        </JobHeader>
-        <div className={styles.workspace}>
-          <section className="card">
-            <h2>Design Controls</h2>
-            {/* Starts in the stone picked when the job was created. */}
-            <ShapeTiles onPick={(shape) => setInitial(newDesign(shape, material))} />
-            <p className={styles.startHint}>Pick a shape to start drawing. You can change it any time.</p>
-          </section>
-          <section className="card">
-            <h2 className="panel-label">Drawing Canvas</h2>
-            <EmptyCanvas />
-          </section>
-          <aside className={styles.quote}>
-            <section className="card">
-              <h2>Quote Summary</h2>
-              <p className="muted">The price appears once there’s a drawing.</p>
-            </section>
-          </aside>
-        </div>
-      </>
-    );
-  }
+  const all = countertops.jobDesign.countertops;
+  // Every countertop with a shape goes on the drawing; the selected one is drawn in full.
+  const pieces = all.flatMap((c) => (c.design ? [{ id: c.id, name: c.name, design: c.design, position: c.position }] : []));
+  const priced = prices ? quoteJob(all, prices) : undefined;
 
-  return <DesignEditor job={job} initial={initial} title={title} onTitle={setTitle} />;
-}
-
-function DesignEditor(props: { job: Job; initial: Design; title: string; onTitle: (title: string) => void }) {
-  const { job, initial, title, onTitle } = props;
-  const api = useDesign(initial);
-  // For the prices next to options and the quote; the rest of the page works while it loads.
-  const { data: prices, error: pricesError } = usePricing();
-  const saving = useSaveJob(job, api.design, title);
-
-  // Save only what can be priced: measurements valid and every price found.
-  const invalid = Object.keys(api.errors).length > 0;
-  const priced = prices && !invalid ? quote(api.design, prices) : undefined;
-  const cantSaveReason = !prices
-    ? 'Waiting for prices'
-    : invalid
-      ? 'Fix the measurements first'
-      : priced?.errors.length
-        ? 'This design can’t be priced'
+  // Saving stores the total too, so it needs valid measurements and every price found.
+  const cantPrice = countertops.invalid.length
+    ? `Fix the measurements on ${countertops.invalid.join(', ')}`
+    : !priced
+      ? 'Waiting for prices'
+      : priced.errors.length
+        ? `Can't price this yet: ${priced.errors.join(' ')}`
         : undefined;
 
   return (
     <>
-      <JobHeader job={job} title={title} onTitle={onTitle} titleHint={`${shapeName(api.design.shape)} Countertop (add a title)`}>
-        <span className={styles.saveStatus} role="status">
-          {saveStatus(saving)}
-        </span>
-        <button
-          type="button"
-          className="button"
-          disabled={!!cantSaveReason || saving.saving || (!saving.unsaved && !saving.neverSaved)}
-          title={cantSaveReason}
-          onClick={() => priced && saving.save(priced.total)}
-        >
-          {saving.saving ? 'Saving…' : 'Save job'}
-        </button>
-      </JobHeader>
+      <header>
+        <div className={styles.headerRow}>
+          <h1>
+            <Link to="/" className={styles.backLink} aria-label="Back to jobs">←</Link>
+            CounterQuote
+          </h1>
+          <div className={styles.saveArea}>
+            <span className="muted">Job #{String(job.id).padStart(3, '0')}</span>
+            <span className={styles.saveStatus} role="status">
+              {saveStatus(saving)}
+            </span>
+            <button
+              type="button"
+              className="button"
+              disabled={!!cantPrice || saving.saving || !saving.unsaved}
+              title={cantPrice ?? (saving.unsaved ? undefined : 'No changes to save')}
+              onClick={() => priced && saving.save(priced.total)}
+            >
+              {saving.saving ? 'Saving…' : 'Save job'}
+            </button>
+          </div>
+        </div>
+        <p className={styles.subtitle}>
+          {job.customerName} —{' '}
+          <input
+            className={styles.titleInput}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Add a project title"
+            maxLength={100}
+            aria-label="Job title"
+          />
+        </p>
+      </header>
 
       <div className={styles.workspace}>
         <section className="card">
-          <h2>Design Controls</h2>
-          <DesignControls api={api} prices={prices} />
-          <FinishControls api={api} prices={prices} />
+          <CountertopList job={countertops} />
         </section>
-        <section className="card">
-          <h2 className="panel-label">Drawing Canvas</h2>
-          <CounterCanvas
-            design={api.design}
-            onMoveSink={api.moveSink}
-            onResize={(field, value) => api.setDimension(field, String(value))}
-          />
-        </section>
-        <aside className={styles.quote}>
-          <QuoteSummary design={api.design} prices={prices} pricesError={pricesError} stale={invalid} />
-        </aside>
-      </div>
-    </>
-  );
-}
 
-/** Back link, job number, save controls (children) and the editable title. */
-function JobHeader(props: {
-  job: Job;
-  title: string;
-  onTitle: (title: string) => void;
-  titleHint: string;
-  children: ReactNode;
-}) {
-  const { job, title, onTitle, titleHint, children } = props;
-  return (
-    <header>
-      <div className={styles.headerRow}>
-        <h1>
-          <Link to="/" className={styles.backLink} aria-label="Back to jobs">←</Link>
-          CounterQuote
-        </h1>
-        <div className={styles.saveArea}>
-          <span className="muted">Job #{String(job.id).padStart(3, '0')}</span>
-          {children}
-        </div>
+        <section className="card" aria-label="Drawing">
+          <div className={styles.canvasHeader}>
+            <h2 className={styles.canvasTitle}>{selected?.name || 'Drawing'}</h2>
+            <span className="muted">Top view</span>
+          </div>
+          {pieces.length ? (
+            <CounterCanvas
+              pieces={pieces}
+              selectedId={selected?.id ?? null}
+              onSelect={countertops.select}
+              onMovePiece={countertops.move}
+              onMoveSink={selectedApi?.moveSink}
+              onResize={selectedApi ? (field, value) => selectedApi.setDimension(field, String(value)) : undefined}
+              message={selected && !selectedApi ? `Pick a shape for ${selected.name || 'this countertop'}` : undefined}
+            />
+          ) : (
+            <EmptyCanvas message={selected ? `Pick a shape for ${selected.name || 'this countertop'}` : 'Add a countertop to start'} />
+          )}
+        </section>
+
+        <section className="card" aria-label="Customization">
+          <h2 className={styles.panelTitle}>Customization</h2>
+          {selected ? (
+            <>
+              <p className={styles.editing}>Editing: {selected.name || 'Untitled'}</p>
+              <label className={`field ${styles.nameField}`}>
+                Countertop name
+                <input
+                  className="control"
+                  value={selected.name}
+                  onChange={(e) => countertops.rename(selected.id, e.target.value)}
+                  placeholder="e.g. Kitchen countertop"
+                  maxLength={60}
+                />
+              </label>
+              {selectedApi ? (
+                <>
+                  <DesignControls api={selectedApi} prices={prices} />
+                  <FinishControls api={selectedApi} prices={prices} />
+                </>
+              ) : (
+                <p className="muted">Pick a shape on its card to start.</p>
+              )}
+            </>
+          ) : (
+            <p className="muted">Add a countertop to customize it.</p>
+          )}
+        </section>
       </div>
-      <p className={styles.subtitle}>
-        {job.customerName} —{' '}
-        <input
-          className={styles.titleInput}
-          value={title}
-          onChange={(e) => onTitle(e.target.value)}
-          placeholder={titleHint}
-          maxLength={100}
-          aria-label="Job title"
-        />
-      </p>
-    </header>
+
+      <JobBar
+        heading={[job.customerName.trim(), title.trim()].filter(Boolean).join(' — ')}
+        countertops={countertops}
+        priced={priced}
+        cantPrice={cantPrice}
+        unsaved={saving.unsaved}
+      />
+    </>
   );
 }
 
@@ -167,6 +160,58 @@ function JobHeader(props: {
 function saveStatus(s: ReturnType<typeof useSaveJob>): string {
   if (s.saving) return '';
   if (s.error) return `Couldn’t save: ${s.error.message}`;
-  if (s.neverSaved) return 'Not saved yet';
   return s.unsaved ? 'Unsaved changes' : 'All changes saved';
+}
+
+/**
+ * The bar along the bottom, for the whole job: how many countertops, their combined area, and
+ * Generate quote, which opens the itemised quote. It doesn't save; Save job at the top does.
+ */
+function JobBar(props: {
+  /** e.g. "Joe — Kitchen project", for the quote's heading. */
+  heading: string;
+  countertops: JobDesignApi;
+  priced?: JobQuote;
+  /** Why there's no price right now, if there isn't one. */
+  cantPrice?: string;
+  unsaved: boolean;
+}) {
+  const { heading, countertops, priced, cantPrice, unsaved } = props;
+  const [showQuote, setShowQuote] = useState(false);
+
+  const all = countertops.jobDesign.countertops;
+  const drawn = all.filter((c) => c.design);
+  const area = drawn.reduce((sum, c) => sum + shapeToPolygon(c.design!).areaSqFt, 0);
+  const cantQuote = drawn.length ? cantPrice : 'Add a countertop and pick its shape first';
+
+  return (
+    <div className={styles.bar}>
+      <div className={styles.barSummary}>
+        <strong className={styles.barCount}>
+          {all.length} countertop{all.length === 1 ? '' : 's'}
+        </strong>
+        <span className={styles.barArea}>{formatNumber(area)} sq. ft. combined</span>
+      </div>
+      <button
+        type="button"
+        className={`button ${styles.generate}`}
+        disabled={!!cantQuote}
+        title={cantQuote}
+        onClick={() => setShowQuote(true)}
+      >
+        Generate quote →
+      </button>
+
+      {priced && (
+        <QuoteDialog
+          open={showQuote}
+          onClose={() => setShowQuote(false)}
+          heading={heading}
+          quote={priced}
+          skipped={all.filter((c) => !c.design).map((c) => c.name || 'Untitled')}
+          note={unsaved ? 'Not saved yet. Use Save job at the top to keep it.' : 'Matches the saved job.'}
+        />
+      )}
+    </div>
+  );
 }

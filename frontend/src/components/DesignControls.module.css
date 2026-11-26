@@ -1,3 +1,4 @@
+/* Field, box and error styles are shared, from index.css; only the panel's layout lives here. */
 .controls {
   display: grid;
   gap: 10px;
@@ -10,90 +11,9 @@
   margin: 2px 0;
 }
 
-/* One labelled control: label text, then the input, then an error or hint. */
-.field {
-  display: grid;
-  gap: 4px;
-  color: #3e4c59;
-  border: 0;
-  padding: 0;
-  margin: 0;
-}
-
-.field legend {
-  padding: 0;
-  margin-bottom: 4px;
-}
-
-.field input,
-.field select {
-  font: inherit;
-  padding: 6px 8px;
-  border: 1px solid #c4ccd4;
-  border-radius: var(--radius-control);
-  background: #fff;
-}
-
-.field input[aria-invalid='true'] {
-  border-color: #a61b1b;
-  background: #fdf5f5;
-}
-
-.error {
-  color: #a61b1b;
-  font-size: 12px;
-}
-
 /* Two boxes side by side, e.g. Length | Depth. */
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-}
-
-/* Lets inputs shrink to fit their column instead of their default width. */
-.field input {
-  min-width: 0;
-}
-
-/* Group heading with an info icon beside it. */
-.labelRow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.shapeTiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.shapeTile {
-  padding: 12px 6px;
-  border: 1px solid #d5dbe1;
-  border-radius: var(--radius-control);
-  background: #fff;
-  cursor: pointer;
-}
-
-.shapeTile svg {
-  display: block;
-  width: 100%;
-  height: 40px;
-  fill: #9aa5b1;
-}
-
-.shapeTile[aria-pressed='true'] {
-  border-color: #1d5fa8;
-  background: #eef4fc;
-}
-
-.shapeTile[aria-pressed='true'] svg {
-  fill: #8fb6ea;
-}
-
-.shapeTile:focus-visible {
-  outline: 2px solid #1d5fa8;
-  outline-offset: 2px;
 }

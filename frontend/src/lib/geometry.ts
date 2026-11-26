@@ -12,10 +12,10 @@ export type SinkType = 'None' | 'Drop-in' | 'Undermount';
 export interface Design {
   material: Material;
   grade: Grade;
-  /** Profile per edge id. Edges not listed use their default (see edgeProfile). */
-  edgeProfiles: Partial<Record<string, EdgeProfile>>;
-  /** Indexes into Outline.points of the corners that are rounded. */
-  roundedCorners: number[];
+  /** The profile of every exposed edge. Edges against a wall are always Unfinished. */
+  edgeProfile: EdgeProfile;
+  /** True: every corner that can be rounded is (see roundableCorners). False: all square. */
+  roundedCorners: boolean;
   sink: SinkType;
   /** Where the user dragged the sink (its centre, in inches). Visual only; not set until moved. */
   sinkCenter?: Point;
@@ -28,6 +28,11 @@ export interface Design {
   leftExtension: number;
   /** How far the right leg comes forward past the back run's depth (U only). */
   rightExtension: number;
+  /**
+   * True for a piece with no side against a wall, e.g. a kitchen island: every edge is finished
+   * (and charged) and every outside corner can be rounded. False: the back and side walls stay unfinished.
+   */
+  freestanding: boolean;
 }
 
 export interface Point {
@@ -56,9 +61,9 @@ export interface Outline {
 
 const SQ_IN_PER_SQ_FT = 144;
 
-/** The edge's chosen profile, or its default: Unfinished against a wall, Eased when exposed. */
+/** An edge's profile: Unfinished against a wall, otherwise the design's chosen profile. */
 export function edgeProfile(design: Design, edge: Edge): EdgeProfile {
-  return design.edgeProfiles[edge.id] ?? (edge.againstWall ? 'Unfinished' : 'Eased');
+  return edge.againstWall ? 'Unfinished' : design.edgeProfile;
 }
 
 export type DimensionField = 'length' | 'depth' | 'leftExtension' | 'rightExtension';
@@ -97,7 +102,8 @@ export function fieldErrors(d: Design): Partial<Record<DimensionField, string>> 
       errors[field] = `${fieldLabel(d.shape, field)} must be ${min}–${max} in.`;
     }
   }
-  if (!errors.length && !errors.depth) {
+  // Only when Length and Depth are each fine on their own (errors['length'] is the Length box's message).
+  if (!errors['length'] && !errors['depth']) {
     if (d.shape === 'L' && !(d.length > d.depth)) errors.length = 'Length must be more than the depth for an L.';
     if (d.shape === 'U' && !(d.length > 2 * d.depth)) errors.length = 'Length must be more than twice the depth for a U.';
   }
@@ -150,12 +156,52 @@ export function shapeToPolygon(d: Design): Outline {
   }
 
   const points = corners.map(([p]) => p);
-  const edges: Edge[] = corners.map(([from, id, label, againstWall], i) => {
+  const edges: Edge[] = corners.map(([from, id, label, wallSide], i) => {
     const to = points[(i + 1) % points.length];
+    // A freestanding piece (an island) touches no wall, so none of its edges is a wall edge.
+    const againstWall = wallSide && !d.freestanding;
     return { id, label, from, to, length: Math.hypot(to.x - from.x, to.y - from.y), againstWall };
   });
 
   return { points, edges, areaSqFt: polygonArea(points) / SQ_IN_PER_SQ_FT };
+}
+
+/** How much room a countertop takes up: its width and height, in inches. */
+export function sizeOf(d: Design): { width: number; height: number } {
+  const { points } = shapeToPolygon(d);
+  return { width: Math.max(...points.map((p) => p.x)), height: Math.max(...points.map((p) => p.y)) };
+}
+
+/** Gap left when a new countertop is placed beside the others, in inches. */
+const PIECE_GAP = 24;
+
+/** A countertop placed on the plan: its design, and where its top-left corner sits (inches). */
+export interface Placed {
+  design: Design;
+  at: Point;
+}
+
+/**
+ * Whether two placed countertops overlap: any run of one crosses any run of the other.
+ * Touching edge to edge isn't an overlap.
+ */
+export function overlaps(a: Placed, b: Placed): boolean {
+  return runs(a.design).some((ra) =>
+    runs(b.design).some(
+      (rb) =>
+        a.at.x + ra.x0 < b.at.x + rb.x1 &&
+        b.at.x + rb.x0 < a.at.x + ra.x1 &&
+        a.at.y + ra.y0 < b.at.y + rb.y1 &&
+        b.at.y + rb.y0 < a.at.y + ra.y1,
+    ),
+  );
+}
+
+/** Where a newly drawn countertop goes: to the right of the others, with a gap, on a whole foot. */
+export function placeAfter(others: Placed[]): Point {
+  if (!others.length) return { x: 0, y: 0 };
+  const right = Math.max(...others.map((o) => o.at.x + sizeOf(o.design).width));
+  return { x: Math.ceil((right + PIECE_GAP) / 12) * 12, y: Math.min(...others.map((o) => o.at.y)) };
 }
 
 /** A fresh design when a shape is first picked: the sizes from the design mock, no extras chosen yet. */
@@ -168,9 +214,10 @@ export function newDesign(shape: ShapeKind, material: Material): Design {
     rightExtension: 60,
     material,
     grade: 1,
-    edgeProfiles: {},
-    roundedCorners: [],
+    edgeProfile: 'Eased',
+    roundedCorners: false,
     sink: 'None',
+    freestanding: false,
   };
 }
 
@@ -204,13 +251,6 @@ export function resizeHandles(d: Design): ResizeHandle[] {
 const SNAP = 0.5;
 
 /**
- * The value a handle dragged to `p` sets, snapped to ½" and kept to a size the shape can draw.
- */
-export function dimensionAt(d: Design, field: DimensionField, p: Point): number {
-  return clampDimension(d, field, field === 'length' ? p.x : field === 'depth' ? p.y : p.y - d.depth);
-}
-
-/**
  * A wanted value snapped to ½" and kept to a size the shape can draw:
  * within LIMITS, an L longer than it is deep, a U longer than twice its depth.
  */
@@ -225,7 +265,7 @@ export function clampDimension(d: Design, field: DimensionField, raw: number): n
 }
 
 /** A standard single-bowl sink, in inches: long side along the run, short side front to back. */
-export const SINK_SIZE = { long: 30, short: 18 };
+const SINK_SIZE = { long: 30, short: 18 };
 /** Stone left around the cutout so it doesn't crack, in inches. */
 const SINK_MARGIN = 3;
 
@@ -236,10 +276,11 @@ export interface SinkPlacement {
 }
 
 /**
- * The straight runs a sink can sit in, each a rectangle: the back run, plus a leg for L and U.
- * A sink lines up with its run, so in a leg it turns to run front to back.
+ * The straight runs a countertop is made of, each a rectangle: the back run, plus a leg for L and U.
+ * Used to place the sink (it lines up with its run, so in a leg it turns to run front to back)
+ * and to tell whether two countertops overlap.
  */
-function runs(d: Design): { x0: number; y0: number; x1: number; y1: number; alongX: boolean }[] {
+export function runs(d: Design): { x0: number; y0: number; x1: number; y1: number; alongX: boolean }[] {
   const back = { x0: 0, y0: 0, x1: d.length, y1: d.depth, alongX: true };
   const left = { x0: 0, y0: 0, x1: d.depth, y1: d.depth + d.leftExtension, alongX: false };
   const right = { x0: d.length - d.depth, y0: 0, x1: d.length, y1: d.depth + d.rightExtension, alongX: false };
@@ -295,10 +336,9 @@ export function roundableCorners(outline: Outline): number[] {
   });
 }
 
-/** The design's rounded corners that this shape can actually round. */
+/** The corners drawn and charged as rounded: all that can be, when the design asks for rounded corners. */
 export function roundedCornersOf(design: Design, outline: Outline): number[] {
-  const allowed = new Set(roundableCorners(outline));
-  return [...new Set(design.roundedCorners)].filter((i) => allowed.has(i));
+  return design.roundedCorners ? roundableCorners(outline) : [];
 }
 
 /** Where a rounded corner's curve starts (on the incoming edge) and ends (on the outgoing edge). */

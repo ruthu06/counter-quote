@@ -1,23 +1,13 @@
-// The "Design Controls" panel: shape tiles, measurements, material and grade, and sink.
+// Customization of the selected countertop: measurements, material and grade, and sink.
+// Form styles (.field, .control, .field-error, .label-row) are shared, from index.css.
 
 import type { PricingItem } from '../api';
-import type { useDesign } from '../hooks/useDesign';
-import { type DimensionField, type ShapeKind, type SinkType, LIMITS, fieldLabel, fieldsFor } from '../lib/geometry';
+import type { DesignApi } from '../lib/designState';
+import { type DimensionField, type SinkType, LIMITS, fieldLabel, fieldsFor } from '../lib/geometry';
 import { findPrice } from '../lib/quote';
 import styles from './DesignControls.module.css';
 import { InfoTip } from './InfoTip';
 import { MaterialPicker } from './MaterialPicker';
-
-type DesignApi = ReturnType<typeof useDesign>;
-
-const SHAPES: { shape: ShapeKind; name: string; icon: string }[] = [
-  // Icons are drawn on a 40 x 28 box: a back run, plus legs for L and U.
-  { shape: 'rectangle', name: 'Straight', icon: 'M2 9 H38 V19 H2 Z' },
-  { shape: 'L', name: 'L-Shaped', icon: 'M2 4 H38 V13 H12 V26 H2 Z' },
-  { shape: 'U', name: 'U-Shaped', icon: 'M2 4 H38 V26 H28 V13 H12 V26 H2 Z' },
-];
-
-export const shapeName = (shape: ShapeKind) => SHAPES.find((s) => s.shape === shape)!.name;
 
 const SINKS: SinkType[] = ['None', 'Drop-in', 'Undermount'];
 
@@ -25,32 +15,6 @@ const SINKS: SinkType[] = ['None', 'Drop-in', 'Undermount'];
 function sinkLabel(sink: SinkType, prices?: PricingItem[]) {
   const price = prices && findPrice(prices, 'Sink', sink)?.price;
   return price ? `${sink} (+$${price})` : sink;
-}
-
-/** The three shape buttons. Also shown alone before a job has a drawing, to start one. */
-export function ShapeTiles({ selected, onPick }: { selected?: ShapeKind; onPick: (shape: ShapeKind) => void }) {
-  return (
-    <fieldset className={styles.field}>
-      <legend>Shape</legend>
-      <div className={styles.shapeTiles}>
-        {SHAPES.map(({ shape, name, icon }) => (
-          <button
-            key={shape}
-            type="button"
-            className={styles.shapeTile}
-            aria-pressed={selected === shape}
-            aria-label={name}
-            title={name}
-            onClick={() => onPick(shape)}
-          >
-            <svg viewBox="0 0 40 28" aria-hidden="true">
-              <path d={icon} />
-            </svg>
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
 }
 
 export function DesignControls({ api, prices }: { api: DesignApi; prices?: PricingItem[] }) {
@@ -72,9 +36,7 @@ export function DesignControls({ api, prices }: { api: DesignApi; prices?: Prici
 
   return (
     <div className={styles.controls}>
-      <ShapeTiles selected={draft.shape} onPick={api.setShape} />
-
-      <div className={styles.field}>
+      <div className="field">
         <div className={styles.row}>
           {input('length', 'Length (in)')}
           {input('depth', 'Depth (in)')}
@@ -83,9 +45,9 @@ export function DesignControls({ api, prices }: { api: DesignApi; prices?: Prici
       </div>
 
       {extensions.length > 0 && (
-        <fieldset className={styles.field}>
+        <fieldset className="field">
           <legend>
-            <span className={styles.labelRow}>
+            <span className="label-row">
               {extensions.length > 1 ? 'Extensions (in)' : 'Extension (in)'}
               <InfoTip label="About extensions">
                 How far each leg comes out past the {depth}" depth of the back run. For example, a leg that measures{' '}
@@ -108,8 +70,8 @@ export function DesignControls({ api, prices }: { api: DesignApi; prices?: Prici
 
       <hr />
 
-      <div className={styles.field}>
-        <span className={styles.labelRow}>
+      <div className="field">
+        <span className="label-row">
           <label htmlFor="sink-type">Sink</label>
           <InfoTip label="About sinks">
             <strong>Undermount</strong> fits under the stone, so crumbs wipe straight in and there’s no rim to clean
@@ -120,7 +82,7 @@ export function DesignControls({ api, prices }: { api: DesignApi; prices?: Prici
             collects grime.
           </InfoTip>
         </span>
-        <select id="sink-type" value={draft.sink} onChange={(e) => api.setSink(e.target.value as SinkType)}>
+        <select id="sink-type" className="control" value={draft.sink} onChange={(e) => api.setSink(e.target.value as SinkType)}>
           {SINKS.map((s) => (
             <option key={s} value={s}>{sinkLabel(s, prices)}</option>
           ))}
@@ -141,12 +103,13 @@ function DimensionInput(props: {
 }) {
   const { field, label, accessibleName, value, invalid, onChange } = props;
   return (
-    <label className={styles.field}>
+    <label className="field">
       {label}
       <input
         // Text, not type="number": keeps exactly what was typed and avoids scroll-wheel changes.
         type="text"
         inputMode="decimal"
+        className="control"
         value={value}
         aria-label={accessibleName}
         aria-invalid={invalid}
@@ -165,7 +128,7 @@ function RowErrors({ fields, errors }: { fields: DimensionField[]; errors: Parti
       {fields.map(
         (f) =>
           errors[f] && (
-            <span key={f} id={`${f}-message`} className={styles.error}>
+            <span key={f} id={`${f}-message`} className="field-error">
               {errors[f]}
             </span>
           ),

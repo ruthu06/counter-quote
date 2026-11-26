@@ -6,14 +6,24 @@
   border-top: 1px solid #e1e5ea;
 }
 
-/* Same look as the other fields in the panel. */
-.field {
-  composes: field from './DesignControls.module.css';
-}
+/* Field, box and label styles are shared, from index.css. */
 
-/* Field label with an info icon beside it. */
-.labelRow {
+/* The Freestanding checkbox and its info icon. */
+.checkRow {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #3e4c59;
+  cursor: pointer;
+}
+
+.check input {
+  margin: 0;
+  accent-color: #1d5fa8;
 }

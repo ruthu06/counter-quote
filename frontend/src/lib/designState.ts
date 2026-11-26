@@ -1,7 +1,7 @@
-// Holds the design being edited: what is typed in each box, any errors, and the
-// last valid design, which is what the drawing (and later the price) shows.
+// Editing one design: what is typed in each box, any errors, and the last valid design,
+// which is what the drawing and the price show. Plain functions, so they're easy to test;
+// designApi() binds them to where the state is kept (see hooks/useJobDesign).
 
-import { useState } from 'react';
 import {
   type DimensionField,
   type Design,
@@ -11,12 +11,8 @@ import {
   type Point,
   type ShapeKind,
   type SinkType,
-  edgeProfile,
   fieldErrors,
-  roundableCorners,
-  roundedCornersOf,
-  shapeToPolygon,
-} from '../lib/geometry';
+} from './geometry';
 
 /** Extension used when switching to a shape whose extension is still empty. */
 const DEFAULT_EXTENSION = 60;
@@ -59,10 +55,7 @@ export function setShape(state: DesignState, shape: ShapeKind): DesignState {
   for (const f of ['leftExtension', 'rightExtension'] as const) {
     if (draft[f] !== state.draft[f]) inputs[f] = String(draft[f]);
   }
-  // The new shape has different edges; give its exposed ones the profile the old shape had.
-  draft.edgeProfiles = withExposedProfile(draft, exposedProfile(state.design)).edgeProfiles;
-  // Corner numbers mean different corners on each shape, so re-pick them for the new one.
-  draft.roundedCorners = withCorners(draft, cornerStyle(state.design)).roundedCorners;
+  // Edge profile and corner style apply to whatever edges and corners the new shape has.
   return withDraft(state, draft, inputs);
 }
 
@@ -76,38 +69,19 @@ function applyToBoth(state: DesignState, change: (d: Design) => Design): DesignS
   return { ...state, draft: change(state.draft), design: change(state.design) };
 }
 
-/** The design with every exposed edge (not against a wall) set to the profile; wall edges stay Unfinished. */
-function withExposedProfile(design: Design, profile: EdgeProfile): Design {
-  const exposed = shapeToPolygon(design).edges.filter((e) => !e.againstWall);
-  return { ...design, edgeProfiles: Object.fromEntries(exposed.map((e) => [e.id, profile])) };
-}
-
-/** One profile for all exposed edges. Per-edge choices may come back later; the data already allows it. */
+/** The profile for every exposed edge (wall edges stay Unfinished). */
 export function setExposedEdges(state: DesignState, profile: EdgeProfile): DesignState {
-  return applyToBoth(state, (d) => withExposedProfile(d, profile));
-}
-
-/** The profile the exposed edges have (they all share one); Eased if there are none. */
-export function exposedProfile(design: Design): EdgeProfile {
-  const edge = shapeToPolygon(design).edges.find((e) => !e.againstWall);
-  return edge ? edgeProfile(design, edge) : 'Eased';
+  return applyToBoth(state, (d) => ({ ...d, edgeProfile: profile }));
 }
 
 export type CornerStyle = 'Square' | 'Rounded';
 
-/** The design with every corner that can be rounded set to the style. */
-function withCorners(design: Design, style: CornerStyle): Design {
-  return { ...design, roundedCorners: style === 'Rounded' ? roundableCorners(shapeToPolygon(design)) : [] };
-}
-
-/** One style for all corners that can be rounded, like edges. */
+/** Rounded rounds every corner that can be rounded; Square leaves them all square. */
 export function setCorners(state: DesignState, style: CornerStyle): DesignState {
-  return applyToBoth(state, (d) => withCorners(d, style));
+  return applyToBoth(state, (d) => ({ ...d, roundedCorners: style === 'Rounded' }));
 }
 
-export function cornerStyle(design: Design): CornerStyle {
-  return roundedCornersOf(design, shapeToPolygon(design)).length > 0 ? 'Rounded' : 'Square';
-}
+export const cornerStyle = (design: Design): CornerStyle => (design.roundedCorners ? 'Rounded' : 'Square');
 
 export function setGrade(state: DesignState, grade: Grade): DesignState {
   return applyToBoth(state, (d) => ({ ...d, grade }));
@@ -117,24 +91,50 @@ export function setSink(state: DesignState, sink: SinkType): DesignState {
   return applyToBoth(state, (d) => ({ ...d, sink }));
 }
 
+/**
+ * Freestanding (an island) or against the walls. The edge profile and corner style then apply
+ * to whichever edges and corners are exposed, so nothing else needs changing.
+ */
+export function setFreestanding(state: DesignState, freestanding: boolean): DesignState {
+  return applyToBoth(state, (d) => ({ ...d, freestanding }));
+}
+
 /** Where the sink was dragged to. Kept as asked; placeSink keeps it inside the counter when drawn. */
 export function moveSink(state: DesignState, center: Point): DesignState {
   return applyToBoth(state, (d) => ({ ...d, sinkCenter: center }));
 }
 
-/** `initial` can be a function, so work like reading saved JSON happens only on the first render. */
-export function useDesign(initial: Design | (() => Design)) {
-  const [state, setState] = useState(() => initialState(typeof initial === 'function' ? initial() : initial));
+/** Every editing action for one design, bound to wherever its state lives. */
+export interface DesignApi extends DesignState {
+  /** One message per measurement box that is wrong. */
+  errors: Partial<Record<DimensionField, string>>;
+  setDimension: (field: DimensionField, text: string) => void;
+  setShape: (shape: ShapeKind) => void;
+  setMaterial: (material: Material) => void;
+  setGrade: (grade: Grade) => void;
+  setExposedEdges: (profile: EdgeProfile) => void;
+  setCorners: (style: CornerStyle) => void;
+  setFreestanding: (freestanding: boolean) => void;
+  setSink: (sink: SinkType) => void;
+  moveSink: (center: Point) => void;
+}
+
+/**
+ * Wraps a design's state and an update function into the actions the controls call.
+ * The state can live anywhere: useJobDesign keeps one per countertop.
+ */
+export function designApi(state: DesignState, update: (change: (s: DesignState) => DesignState) => void): DesignApi {
   return {
     ...state,
     errors: fieldErrors(state.draft),
-    setDimension: (field: DimensionField, text: string) => setState((s) => setDimension(s, field, text)),
-    setShape: (shape: ShapeKind) => setState((s) => setShape(s, shape)),
-    setMaterial: (material: Material) => setState((s) => setMaterial(s, material)),
-    setGrade: (grade: Grade) => setState((s) => setGrade(s, grade)),
-    setExposedEdges: (profile: EdgeProfile) => setState((s) => setExposedEdges(s, profile)),
-    setCorners: (style: CornerStyle) => setState((s) => setCorners(s, style)),
-    setSink: (sink: SinkType) => setState((s) => setSink(s, sink)),
-    moveSink: (center: Point) => setState((s) => moveSink(s, center)),
+    setDimension: (field, text) => update((s) => setDimension(s, field, text)),
+    setShape: (shape) => update((s) => setShape(s, shape)),
+    setMaterial: (material) => update((s) => setMaterial(s, material)),
+    setGrade: (grade) => update((s) => setGrade(s, grade)),
+    setExposedEdges: (profile) => update((s) => setExposedEdges(s, profile)),
+    setCorners: (style) => update((s) => setCorners(s, style)),
+    setFreestanding: (freestanding) => update((s) => setFreestanding(s, freestanding)),
+    setSink: (sink) => update((s) => setSink(s, sink)),
+    moveSink: (center) => update((s) => moveSink(s, center)),
   };
 }

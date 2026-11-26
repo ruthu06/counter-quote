@@ -1,19 +1,22 @@
-// Saving a job's design and title: sends the whole job (PUT replaces it), remembers what was
-// last saved, and says whether anything has changed since.
+// Saving a job: all its countertops (with their positions), the title and the quoted total.
+// Sends the whole job (PUT replaces it), remembers what was last saved, and says whether
+// anything has changed since.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { type Job, updateJob } from '../api';
-import { parseDesign, serializeDesign } from '../lib/designStorage';
-import type { Design } from '../lib/geometry';
+import { type JobDesign, parseJobDesign, serializeJobDesign } from '../lib/designStorage';
 
-export function useSaveJob(job: Job, design: Design, title: string) {
+/** The job's materials for the jobs list, e.g. "Quartz, Granite"; empty until something is drawn. */
+function materialsOf(jobDesign: JobDesign): string {
+  const materials = jobDesign.countertops.flatMap((c) => (c.design ? [c.design.material] : []));
+  return [...new Set(materials)].join(', ');
+}
+
+export function useSaveJob(job: Job, jobDesign: JobDesign, title: string) {
   const queryClient = useQueryClient();
-  // What's in the database, in the same form serializeDesign writes, so they compare as text.
-  const [savedJson, setSavedJson] = useState(() => {
-    const saved = parseDesign(job.designJson);
-    return saved ? serializeDesign(saved) : '';
-  });
+  // What's in the database, written the same way as below, so the two compare as text.
+  const [savedJson, setSavedJson] = useState(() => serializeJobDesign(parseJobDesign(job.designJson)));
   const [savedTitle, setSavedTitle] = useState(job.title);
 
   const mutation = useMutation({
@@ -27,8 +30,7 @@ export function useSaveJob(job: Job, design: Design, title: string) {
     },
   });
 
-  const json = serializeDesign(design);
-  const neverSaved = savedJson === '';
+  const json = serializeJobDesign(jobDesign);
   const cleanTitle = title.trim();
   const unsaved = json !== savedJson || cleanTitle !== savedTitle;
 
@@ -41,12 +43,10 @@ export function useSaveJob(job: Job, design: Design, title: string) {
   }, [unsaved]);
 
   return {
-    neverSaved,
     unsaved,
     saving: mutation.isPending,
     error: mutation.error,
-    /** Material is copied to the job too, so the jobs list matches the drawing. */
     save: (quoteTotal: number) =>
-      mutation.mutate({ ...job, title: cleanTitle, material: design.material, designJson: json, quoteTotal }),
+      mutation.mutate({ ...job, title: cleanTitle, material: materialsOf(jobDesign), designJson: json, quoteTotal }),
   };
 }

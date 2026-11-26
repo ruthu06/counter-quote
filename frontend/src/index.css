@@ -14,10 +14,18 @@ th { font-weight: 600; background: #eef1f4; }
 .app-title { color: #fff; font-weight: 600; text-decoration: none; }
 .button { background: #1d5fa8; color: #fff; border: 0; border-radius: var(--radius-control); padding: 6px 12px; font: inherit; cursor: pointer; text-decoration: none; }
 .button:disabled { opacity: 0.6; cursor: default; }
-.card { background: #fff; border: 1px solid #e1e5ea; border-radius: var(--radius-card); padding: 12px; margin: 12px 0; }
+.card { background: #fff; border: 1px solid #e1e5ea; border-radius: var(--radius-card); padding: 16px; margin: 12px 0; }
 .form { display: grid; gap: 10px; max-width: 420px; }
-.form label { display: grid; gap: 4px; }
-.form input, .form select { font: inherit; padding: 5px 6px; border: 1px solid #c4ccd4; border-radius: var(--radius-control); }
+
+/* Form fields, shared by every form so they all look the same:
+   .field wraps a label (or fieldset) and its box; .control is the text box or dropdown itself. */
+.field { display: grid; gap: 4px; min-width: 0; color: #3e4c59; border: 0; padding: 0; margin: 0; }
+.field legend { padding: 0; margin-bottom: 4px; }
+.control { font: inherit; color: inherit; min-width: 0; padding: 6px 10px; border: 1px solid #c4ccd4; border-radius: var(--radius-control); background: #fff; }
+.control[aria-invalid='true'] { border-color: #a61b1b; background: #fdf5f5; }
+.field-error { color: #a61b1b; font-size: 12px; }
+/* A label with an info icon beside it. */
+.label-row { display: inline-flex; align-items: center; gap: 6px; }
 .errors { color: #a61b1b; background: #fdecec; border: 1px solid #f3c2c2; border-radius: var(--radius-control); padding: 8px; }
 .muted { color: #66727f; }
 /* Small grey panel title, e.g. "Drawing canvas". */

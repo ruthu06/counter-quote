@@ -42,6 +42,7 @@ export function ResizeHandles({ design, radius, onResize }: ResizeHandlesProps) 
         const along = (event: PointerEvent) => (axis === 'x' ? event.clientX : event.clientY);
 
         const onPointerDown = (event: PointerEvent<SVGCircleElement>) => {
+          event.stopPropagation(); // resize, don't move the whole countertop
           const ctm = event.currentTarget.ownerSVGElement!.getScreenCTM()!;
           grab.current = { field, startPx: along(event), startValue: design[field], pxPerInch: ctm.a };
           event.currentTarget.setPointerCapture(event.pointerId);

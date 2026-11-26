@@ -3,23 +3,8 @@
   gap: 8px;
 }
 
-.labelRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .label {
   color: #3e4c59;
-}
-
-/* Same look as the other dropdowns in the panel. */
-.select {
-  font: inherit;
-  padding: 6px 8px;
-  border: 1px solid #c4ccd4;
-  border-radius: var(--radius-control);
-  background: #fff;
 }
 
 .grades {

@@ -1,0 +1,27 @@
+/* A countertop on the plan: drag to move it. */
+.piece {
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.piece:active {
+  cursor: grabbing;
+}
+
+/* Reached with Tab: a blue outline round the stone. */
+.piece:focus-visible > path:first-child {
+  stroke: #1d5fa8;
+  stroke-width: 3px;
+}
+
+/* The name on a countertop that isn't selected, with a white halo so it reads on any stone. */
+.name {
+  fill: #33413b;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}

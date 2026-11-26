@@ -42,4 +42,16 @@ public class JobsController(AppDbContext db) : ControllerBase
         await db.SaveChangesAsync();
         return job;
     }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        Job? job = await db.Jobs.FindAsync(id);
+        if (job is null)
+            return NotFound();
+
+        db.Jobs.Remove(job);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 }
