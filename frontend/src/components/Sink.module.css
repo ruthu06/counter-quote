@@ -1,0 +1,16 @@
+/* Draggable sink: a hand cursor, no page scrolling while dragging on touch screens. */
+.sink {
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.sink:active {
+  cursor: grabbing;
+}
+
+/* Reached with Tab: outline the bowl in blue instead of the browser's box. */
+.sink:focus-visible .bowl {
+  stroke: #1d5fa8;
+  stroke-width: 3px;
+}

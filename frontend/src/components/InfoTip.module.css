@@ -1,0 +1,44 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+/* A small round "i", quiet until hovered or focused. */
+.button {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid #9aa5b1;
+  border-radius: 50%;
+  background: #fff;
+  color: #66727f;
+  font: italic 600 11px/1 Georgia, serif;
+  cursor: pointer;
+}
+
+.button:hover,
+.button[aria-expanded='true'] {
+  border-color: #1d5fa8;
+  color: #1d5fa8;
+}
+
+.button:focus-visible {
+  outline: 2px solid #1d5fa8;
+  outline-offset: 2px;
+}
+
+/* Opens below the icon, over the content around it. */
+.tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: -8px;
+  z-index: 10;
+  width: 240px;
+  padding: 8px 10px;
+  border-radius: var(--radius-control);
+  background: #22303d;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

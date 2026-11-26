@@ -30,13 +30,197 @@ namespace CounterQuote.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DesignJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Material")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("QuoteTotal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.ToTable("Jobs");
+                });
+
+            modelBuilder.Entity("CounterQuote.Api.Models.PricingItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PricingItems");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Category = "Material",
+                            Name = "Granite Level 1",
+                            Price = 50m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Category = "Material",
+                            Name = "Quartz Level 1",
+                            Price = 60m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Category = "Material",
+                            Name = "Marble Level 1",
+                            Price = 70m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Category = "Material",
+                            Name = "Granite Level 2",
+                            Price = 70m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Category = "Material",
+                            Name = "Quartz Level 2",
+                            Price = 80m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Category = "Material",
+                            Name = "Marble Level 2",
+                            Price = 100m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Category = "Material",
+                            Name = "Granite Level 3",
+                            Price = 100m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Category = "Material",
+                            Name = "Quartz Level 3",
+                            Price = 120m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Category = "Material",
+                            Name = "Marble Level 3",
+                            Price = 160m,
+                            Unit = "sqft"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "Edge",
+                            Name = "Unfinished",
+                            Price = 0m,
+                            Unit = "linearft"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = "Edge",
+                            Name = "Eased",
+                            Price = 0m,
+                            Unit = "linearft"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Category = "Edge",
+                            Name = "Beveled",
+                            Price = 10m,
+                            Unit = "linearft"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Category = "Edge",
+                            Name = "Bullnose",
+                            Price = 15m,
+                            Unit = "linearft"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Category = "Corner",
+                            Name = "Square",
+                            Price = 0m,
+                            Unit = "each"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Category = "Corner",
+                            Name = "Rounded",
+                            Price = 60m,
+                            Unit = "each"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Category = "Sink",
+                            Name = "None",
+                            Price = 0m,
+                            Unit = "each"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Category = "Sink",
+                            Name = "Drop-in",
+                            Price = 100m,
+                            Unit = "each"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Category = "Sink",
+                            Name = "Undermount",
+                            Price = 250m,
+                            Unit = "each"
+                        });
                 });
 #pragma warning restore 612, 618
         }

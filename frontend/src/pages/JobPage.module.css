@@ -1,0 +1,104 @@
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Job number, save status and the Save button, top right. */
+.saveArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.saveStatus {
+  color: #66727f;
+  font-size: 12px;
+}
+
+.backLink {
+  margin-right: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
+/* The title reads as plain text; an underline on hover and a box on focus show it can be edited. */
+.titleInput {
+  flex: 1;
+  max-width: 420px;
+  font: inherit;
+  color: inherit;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+}
+
+.titleInput:hover {
+  border-bottom-color: #c4ccd4;
+}
+
+.titleInput:focus {
+  outline: none;
+  border-color: #1d5fa8;
+  background: #fff;
+}
+
+.titleInput::placeholder {
+  color: #66727f;
+}
+
+/* Controls | drawing | quote. Narrower screens move the quote under the drawing, then stack everything. */
+.workspace {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  gap: 12px;
+  align-items: start;
+}
+
+/* .card is a shared global style; only its spacing changes inside the workspace. */
+.workspace :global(.card) {
+  margin: 12px 0 0;
+}
+
+/* The quote stays in view while the page scrolls. */
+.quote {
+  position: sticky;
+  top: 12px;
+}
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .quote {
+    grid-column: 2;
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .quote {
+    grid-column: auto;
+  }
+}
+
+/* Under the shape tiles before a drawing exists. */
+.startHint {
+  margin: 10px 0 0;
+  color: #66727f;
+  font-size: 13px;
+}

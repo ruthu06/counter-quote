@@ -1,6 +1,9 @@
-:root { font-family: system-ui, sans-serif; font-size: 14px; color: #1f2933; background: #f4f5f7; }
+/* Global styles only: page basics and pieces shared across pages. Component styles live in *.module.css next to each component. */
+:root { font-family: system-ui, sans-serif; font-size: 14px; color: #1f2933; background: #f4f5f7;
+  /* Corner roundness, shared by every box so the UI feels consistent: cards, then inputs and buttons. */
+  --radius-card: 12px; --radius-control: 8px; }
 body { margin: 0; }
-main { max-width: 960px; margin: 0 auto; padding: 16px; }
+main { max-width: 1400px; margin: 0 auto; padding: 16px; }
 h1 { font-size: 20px; margin: 8px 0; }
 h2 { font-size: 15px; margin: 0 0 8px; }
 a { color: #1d5fa8; }
@@ -9,11 +12,13 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e1e5ea; }
 th { font-weight: 600; background: #eef1f4; }
 .app-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: #22303d; }
 .app-title { color: #fff; font-weight: 600; text-decoration: none; }
-.button { background: #1d5fa8; color: #fff; border: 0; border-radius: 4px; padding: 6px 12px; font: inherit; cursor: pointer; text-decoration: none; }
+.button { background: #1d5fa8; color: #fff; border: 0; border-radius: var(--radius-control); padding: 6px 12px; font: inherit; cursor: pointer; text-decoration: none; }
 .button:disabled { opacity: 0.6; cursor: default; }
-.card { background: #fff; border: 1px solid #e1e5ea; border-radius: 4px; padding: 12px; margin: 12px 0; }
+.card { background: #fff; border: 1px solid #e1e5ea; border-radius: var(--radius-card); padding: 12px; margin: 12px 0; }
 .form { display: grid; gap: 10px; max-width: 420px; }
 .form label { display: grid; gap: 4px; }
-.form input, .form select { font: inherit; padding: 5px 6px; border: 1px solid #c4ccd4; border-radius: 4px; }
-.errors { color: #a61b1b; background: #fdecec; border: 1px solid #f3c2c2; border-radius: 4px; padding: 8px; }
+.form input, .form select { font: inherit; padding: 5px 6px; border: 1px solid #c4ccd4; border-radius: var(--radius-control); }
+.errors { color: #a61b1b; background: #fdecec; border: 1px solid #f3c2c2; border-radius: var(--radius-control); padding: 8px; }
 .muted { color: #66727f; }
+/* Small grey panel title, e.g. "Drawing canvas". */
+.panel-label { color: #66727f; font-weight: 400; }

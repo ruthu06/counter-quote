@@ -1,0 +1,24 @@
+/* A blue dot with a white ring, so it shows on every stone. */
+.handle {
+  fill: #1d5fa8;
+  stroke: #fff;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+  touch-action: none;
+  outline: none;
+}
+
+.handle:hover,
+.handle:focus-visible {
+  fill: #154a85;
+  stroke-width: 3px;
+}
+
+/* The cursor shows which way the handle moves. */
+.ew {
+  cursor: ew-resize;
+}
+
+.ns {
+  cursor: ns-resize;
+}

@@ -1,6 +1,7 @@
 using CounterQuote.Api.Controllers;
 using CounterQuote.Api.Data;
 using CounterQuote.Api.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,48 @@ public class JobsControllerTests : IDisposable
         Job job = Assert.Single(await new JobsController(readDb).GetAll());
         Assert.Equal("Rivera", job.CustomerName);
         Assert.Equal("Quartz", job.Material);
+    }
+
+    [Fact]
+    public async Task Saving_a_design_stores_its_title_drawing_and_total()
+    {
+        const string design = """{"shape":"L","length":120,"depth":24,"leftExtension":60,"material":"Quartz"}""";
+        int id;
+        using (AppDbContext db = CreateDb())
+        {
+            ActionResult<Job> created = await new JobsController(db).Create(new Job { CustomerName = "Rivera", Material = "Granite" });
+            id = ((Job)((CreatedAtActionResult)created.Result!).Value!).Id;
+        }
+
+        using (AppDbContext db = CreateDb())
+            await new JobsController(db).Update(id, new Job
+            {
+                CustomerName = "Rivera",
+                Material = "Quartz",
+                Title = "Kitchen countertop",
+                DesignJson = design,
+                QuoteTotal = 2845m,
+            });
+
+        using AppDbContext readDb = CreateDb();
+        Job job = (await new JobsController(readDb).Get(id)).Value!;
+        Assert.Equal("Kitchen countertop", job.Title);
+        Assert.Equal(design, job.DesignJson);
+        Assert.Equal(2845m, job.QuoteTotal);
+        Assert.Equal("Quartz", job.Material);
+    }
+
+    [Fact]
+    public async Task Pricing_returns_the_seeded_price_list()
+    {
+        using AppDbContext db = CreateDb();
+        List<PricingItem> items = await new PricingController(db).GetAll();
+
+        Assert.Equal(18, items.Count);
+        Assert.Equal(9, items.Count(p => p.Category == "Material"));
+        PricingItem quartz = Assert.Single(items, p => p.Category == "Material" && p.Name == "Quartz Level 2");
+        Assert.Equal(80m, quartz.Price);
+        Assert.Equal("sqft", quartz.Unit);
     }
 
     [Fact]

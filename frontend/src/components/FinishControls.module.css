@@ -1,0 +1,19 @@
+.group {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e1e5ea;
+}
+
+/* Same look as the other fields in the panel. */
+.field {
+  composes: field from './DesignControls.module.css';
+}
+
+/* Field label with an info icon beside it. */
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
