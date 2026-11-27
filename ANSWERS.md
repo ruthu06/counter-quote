@@ -38,6 +38,8 @@ While researching material prices, I noticed that the same material could have a
 
 I also came across a few websites where basic edge and corner treatments were included in the base price, and only premium treatments had additional charges. I decided to follow a similar approach in my application.
 
+Left out on purpose: backsplash, installation, extra cutouts and slab waste
+
 ## 3. How did you use AI? Where did it help, and how did you lead it?
 I used a spec-driven development approach. Once I was done with my research and had a clear understanding of the functional requirements, I listed everything I wanted to implement and worked with AI to turn it into a written spec: the requirements, the pricing model, the key design decisions with their trade-offs, and the work broken into small steps, each with a clear "done when" check.
 
